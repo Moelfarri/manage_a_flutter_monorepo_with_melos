@@ -1,0 +1,44 @@
+name: example_mono_repo_project
+
+packages:
+  # only includes children of these directories.
+  # to include descents of children apply apps/*/example/*
+  - packages/*
+  - apps/*
+
+ide:
+  intellij:
+    enabled: false
+
+scripts:
+  analyze:
+    exec: dart analyze .
+  clean:
+    exec: flutter clean
+  test:
+    run: flutter test --coverage
+    description: Run unit tests for all packages and apps
+    exec:
+      concurrency: 1
+      failFast: true
+
+  test:changed:
+    name: Test Changed Packages
+    description: Run unit tests only for packages that have changed from the master branch and ignores packages with example in their name
+    run: flutter test --coverage
+    exec:
+      concurrency: 1
+      failFast: true #if one of the tests fails, the whole script fails
+    packageFilters:
+      diff: HEAD^...HEAD
+      ignore: "*example*"
+
+  # takes all coverage files and combines them into one
+  merge_reports:
+    run: melos exec -- "\$MELOS_ROOT_PATH/scripts/combine_coverage.sh"
+    description: merge all coverage reports into one
+
+    #Alias scripts
+  tc:
+    run: melos run test:changed --no-select
+    description: alias for test:changed
